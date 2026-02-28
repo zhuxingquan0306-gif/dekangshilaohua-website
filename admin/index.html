@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>德康网站管理后台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              orange: '#f49f36',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f9fafb;
+    }
+    .input-field {
+      @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent;
+    }
+    .textarea-field {
+      @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent resize-y min-h-[100px];
+    }
+    .card {
+      @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+    }
+    .btn-primary {
+      @apply px-4 py-2 bg-brand-orange text-white rounded-lg hover:bg-orange-600 transition-colors;
+    }
+    .btn-secondary {
+      @apply px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors;
+    }
+    .sidebar-item {
+      @apply flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg cursor-pointer transition-colors;
+    }
+    .sidebar-item.active {
+      @apply bg-orange-50 text-brand-orange font-medium;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    
+    // 默认配置
+    const defaultConfig = {
+      hero: {
+        tag: '适老化专家',
+        title: '为长者打造',
+        titleHighlight: '安全舒适',
+        description: '德康适老化家居将建筑精准与有机温暖完美融合，为养老机构和长者居所设计兼具安全性与优雅气质的家具。',
+        primaryButton: '探索系列',
+        secondaryButton: '观看影片',
+        backgroundImage: './hero-living-room.jpg'
+      },
+      about: {
+        tag: '关于我们',
+        title: '以精准与关怀',
+        titleHighlight: '适老空间',
+        description: '德康适老化家具是一家集设计、研发、生产、销售、服务于一体的养老家具品牌。我们将建筑美学与适老化功能相结合，为养老机构提供从设计到落地的全流程服务。每一件家具都经过人体工程学验证，确保长者的安全与舒适。',
+        features: [
+          { title: '安全保障', description: '圆角设计、防滑材质，每一个细节都为长者安全考虑' },
+          { title: '环保材质', description: 'A级木材，环保油漆，符合国家环保标准' },
+          { title: '品质认证', description: '70+项专利产品，行业权威认证' }
+        ],
+        image1: './about-room-1.jpg',
+        image2: './about-room-2.jpg'
+      },
+      stats: {
+        items: [
+          { value: '20+', label: '年行业经验' },
+          { value: '300+', label: '合作养老机构' },
+          { value: '5000+', label: '适老化家具产品' },
+          { value: '3000+', label: '服务长者人数' }
+        ]
+      },
+      services: [
+        { icon: 'Chair', title: '适老化家具', description: '专业设计生产的适老化床、椅、桌、柜等家具，采用圆角设计、防滑材质，为长者打造安全舒适的居住环境。' },
+        { icon: 'Package', title: '适老化产品', description: '提供全方位的适老化辅助产品，包括扶手、护栏、无障碍设施等，满足长者日常生活的各种需求。' },
+        { icon: 'Home', title: '适老化改造', description: '专业团队提供居家和机构的适老化改造服务，从空间规划到产品配置，打造安全便利的适老环境。' },
+        { icon: 'Handshake', title: '养老运营服务', description: '为养老机构提供从规划设计到运营管理的全流程服务支持，助力打造高品质的养老服务品牌。' }
+      ],
+      products: [
+        { id: 1, name: '适老化餐椅', category: '座椅系列', image: './product-chair.png', description: '人体工程学设计，圆角处理，舒适安全' },
+        { id: 2, name: '适老化沙发', category: '沙发系列', image: './product-sofa.png', description: '加高靠背，扶手支撑，便于起身' },
+        { id: 3, name: '适老化茶几', category: '桌台系列', image: './product-table.png', description: '圆角设计，高度适中，方便轮椅使用' },
+        { id: 4, name: '多功能护理床', category: '床具系列', image: './product-bed.png', description: '电动升降，护栏保护，医用级品质' }
+      ],
+      testimonials: [
+        { content: '德康的家具彻底改变了我们的养老空间。长者们对新环境赞不绝口，特别是圆角设计和扶手细节，让家属们也更加放心。专业的团队和优质的产品，值得信赖！', author: '陈明远', role: '阳光养老院 院长', rating: 5 },
+        { content: '对细节的关注无与伦比。从设计到安装，每一个环节都体现了德康团队的专业素养。家具不仅美观大方，更重要的是真正考虑到了长者的使用需求。', author: '林雅芳', role: '康乐老年公寓 运营总监', rating: 5 },
+        { content: '安全与美观的完美平衡。我们在多家供应商中选择了德康，事实证明这是正确的决定。产品质量过硬，售后服务及时，是长期合作的理想伙伴。', author: '王志豪', role: '颐养天年护理院 设施经理', rating: 5 }
+      ],
+      cta: {
+        title: '准备好改变您的\n养老空间了吗？',
+        description: '联系我们的专业团队，获取免费的适老化空间设计方案和报价',
+        primaryButton: '立即咨询',
+        secondaryButton: '下载产品手册',
+        phone: '400-888-8888',
+        email: 'contact@dekang.com',
+        address: '广东省佛山市顺德区家具产业园'
+      }
+    };
+
+    const sections = [
+      { id: 'hero', label: '首页主视觉', icon: 'Layout' },
+      { id: 'about', label: '关于我们', icon: 'Type' },
+      { id: 'stats', label: '数据统计', icon: 'BarChart3' },
+      { id: 'services', label: '服务板块', icon: 'Briefcase' },
+      { id: 'products', label: '产品展示', icon: 'ShoppingBag' },
+      { id: 'testimonials', label: '客户评价', icon: 'MessageSquare' },
+      { id: 'cta', label: '联系我们', icon: 'Phone' },
+    ];
+
+    // 图标组件
+    const Icons = {
+      Layout: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="21" y2="9"/></svg>,
+      Type: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>,
+      BarChart3: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>,
+      Briefcase: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>,
+      ShoppingBag: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
+      MessageSquare: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+      Phone: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+      Save: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+      Download: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>,
+      Eye: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>,
+      ChevronRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>,
+      Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+      X: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>,
+      Plus: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
+      Trash2: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>,
+      Star: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+      Image: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>,
+      AlignLeft: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 6H3"/><path d="M21 12H9"/><path d="M21 18H3"/></svg>,
+      MousePointer: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></svg>,
+      User: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+      Building2: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 12h4"/><path d="M10 8h4"/><path d="M10 16h4"/><path d="M6 20h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></svg>,
+      Monitor: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>,
+      Smartphone: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>,
+      Tablet: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><line x1="12" x2="12.01" y1="18" y2="18"/></svg>,
+      Tag: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>,
+      List: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>,
+      Phone: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+      Mail: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>,
+      MapPin: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
+    };
+
+    // Hero 编辑器
+    function HeroEditor({ data, onChange }) {
+      const handleChange = (field, value) => {
+        onChange({ ...data, [field]: value });
+      };
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+              <Icons.MousePointer />
+              编辑提示
+            </h4>
+            <p className="text-sm text-blue-700">
+              这里编辑网站首页的主视觉区域内容。修改后点击右上角"保存修改"按钮保存。
+            </p>
+          </div>
+
+          <div className="card">
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <Icons.Type />
+              顶部标签
+            </label>
+            <input
+              type="text"
+              value={data.tag}
+              onChange={(e) => handleChange('tag', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+              placeholder="例如：适老化专家"
+            />
+            <p className="text-xs text-gray-500 mt-1">显示在主标题上方的小标签</p>
+          </div>
+
+          <div className="card">
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <Icons.Type />
+              主标题（前半部分）
+            </label>
+            <input
+              type="text"
+              value={data.title}
+              onChange={(e) => handleChange('title', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+              placeholder="例如：为长者打造"
+            />
+          </div>
+
+          <div className="card">
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <Icons.Type />
+              主标题（高亮部分）
+            </label>
+            <input
+              type="text"
+              value={data.titleHighlight}
+              onChange={(e) => handleChange('titleHighlight', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+              placeholder="例如：安全舒适"
+            />
+            <p className="text-xs text-gray-500 mt-1">会以橙色高亮显示的文字</p>
+          </div>
+
+          <div className="card">
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <Icons.AlignLeft />
+              描述文字
+            </label>
+            <textarea
+              value={data.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent resize-y min-h-[100px]"
+              rows={3}
+              placeholder="输入描述文字..."
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="card">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                主按钮文字
+              </label>
+              <input
+                type="text"
+                value={data.primaryButton}
+                onChange={(e) => handleChange('primaryButton', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                placeholder="例如：探索系列"
+              />
+            </div>
+            <div className="card">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                次按钮文字
+              </label>
+              <input
+                type="text"
+                value={data.secondaryButton}
+                onChange={(e) => handleChange('secondaryButton', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                placeholder="例如：观看影片"
+              />
+            </div>
+          </div>
+
+          <div className="card">
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <Icons.Image />
+              背景图片路径
+            </label>
+            <input
+              type="text"
+              value={data.backgroundImage}
+              onChange={(e) => handleChange('backgroundImage', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+              placeholder="例如：./hero-living-room.jpg"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              图片文件需要放在网站的 public 文件夹中
+            </p>
+            <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+              <p className="text-xs text-gray-600 mb-2">当前图片预览：</p>
+              <img 
+                src={data.backgroundImage} 
+                alt="背景预览" 
+                className="max-h-32 rounded-lg object-cover"
+                onError={(e) => {
+                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="100"%3E%3Crect fill="%23f0f0f0" width="200" height="100"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3E图片加载失败%3C/text%3E%3C/svg%3E';
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // About 编辑器
+    function AboutEditor({ data, onChange }) {
+      const handleChange = (field, value) => {
+        onChange({ ...data, [field]: value });
+      };
+
+      const handleFeatureChange = (index, field, value) => {
+        const newFeatures = [...data.features];
+        newFeatures[index] = { ...newFeatures[index], [field]: value };
+        handleChange('features', newFeatures);
+      };
+
+      return (
+        <div className="space-y-6">
+          <div className="card">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              顶部标签
+            </label>
+            <input
+              type="text"
+              value={data.tag}
+              onChange={(e) => handleChange('tag', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+              placeholder="例如：关于我们"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="card">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                标题（前半部分）
+              </label>
+              <input
+                type="text"
+                value={data.title}
+                onChange={(e) => handleChange('title', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                placeholder="例如：以精准与关怀"
+              />
+            </div>
+            <div className="card">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                标题（高亮部分）
+              </label>
+              <input
+                type="text"
+                value={data.titleHighlight}
+                onChange={(e) => handleChange('titleHighlight', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                placeholder="例如：适老空间"
+              />
+            </div>
+          </div>
+
+          <div className="card">
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <Icons.AlignLeft />
+              描述文字
+            </label>
+            <textarea
+              value={data.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent resize-y min-h-[100px]"
+              rows={5}
+              placeholder="输入关于我们的详细描述..."
+            />
+          </div>
+
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                <Icons.Type />
+                特色优势
+              </label>
+            </div>
+            <div className="space-y-4">
+              {data.features.map((feature, index) => (
+                <div key={index} className="p-4 bg-gray-50 rounded-lg">
+                  <div className="text-sm font-medium text-gray-600 mb-3">优势 {index + 1}</div>
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      value={feature.title}
+                      onChange={(e) => handleFeatureChange(index, 'title', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                      placeholder="标题，例如：安全保障"
+                    />
+                    <input
+                      type="text"
+                      value={feature.description}
+                      onChange={(e) => handleFeatureChange(index, 'description', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                      placeholder="描述，例如：圆角设计、防滑材质..."
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="card">
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Icons.Image />
+                主图片
+              </label>
+              <input
+                type="text"
+                value={data.image1}
+                onChange={(e) => handleChange('image1', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent mb-2"
+                placeholder="./about-room-1.jpg"
+              />
+              <img 
+                src={data.image1} 
+                alt="主图片预览" 
+                className="w-full h-32 object-cover rounded-lg"
+                onError={(e) => {
+                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="100"%3E%3Crect fill="%23f0f0f0" width="200" height="100"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3E图片加载失败%3C/text%3E%3C/svg%3E';
+                }}
+              />
+            </div>
+            <div className="card">
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Icons.Image />
+                次图片
+              </label>
+              <input
+                type="text"
+                value={data.image2}
+                onChange={(e) => handleChange('image2', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent mb-2"
+                placeholder="./about-room-2.jpg"
+              />
+              <img 
+                src={data.image2} 
+                alt="次图片预览" 
+                className="w-full h-32 object-cover rounded-lg"
+                onError={(e) => {
+                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="100"%3E%3Crect fill="%23f0f0f0" width="200" height="100"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3E图片加载失败%3C/text%3E%3C/svg%3E';
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Stats 编辑器
+    function StatsEditor({ data, onChange }) {
+      const handleItemChange = (index, field, value) => {
+        const newItems = [...data.items];
+        newItems[index] = { ...newItems[index], [field]: value };
+        onChange({ ...data, items: newItems });
+      };
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-900 mb-2">编辑提示</h4>
+            <p className="text-sm text-blue-700">
+              数据统计区域展示公司的核心数据，如年经验、合作机构数量等。
+            </p>
+          </div>
+
+          <div className="card">
+            <label className="block text-sm font-medium text-gray-700 mb-4 flex items-center gap-2">
+              <Icons.BarChart3 />
+              统计项列表
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              {data.items.map((item, index) => (
+                <div key={index} className="p-4 bg-gray-50 rounded-lg">
+                  <div className="text-xs text-gray-500 mb-2">统计项 {index + 1}</div>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">数值</label>
+                      <input
+                        type="text"
+                        value={item.value}
+                        onChange={(e) => handleItemChange(index, 'value', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                        placeholder="例如：20+"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">标签</label>
+                      <input
+                        type="text"
+                        value={item.label}
+                        onChange={(e) => handleItemChange(index, 'label', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                        placeholder="例如：年行业经验"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card">
+            <label className="block text-sm font-medium text-gray-700 mb-4">
+              效果预览
+            </label>
+            <div className="grid grid-cols-4 gap-4 p-4 bg-gray-100 rounded-lg">
+              {data.items.map((item, index) => (
+                <div key={index} className="text-center">
+                  <div className="text-2xl font-bold text-brand-orange">{item.value}</div>
+                  <div className="text-xs text-gray-600">{item.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Services 编辑器
+    function ServicesEditor({ data, onChange }) {
+      const handleServiceChange = (index, field, value) => {
+        const newServices = [...data];
+        newServices[index] = { ...newServices[index], [field]: value };
+        onChange(newServices);
+      };
+
+      const addService = () => {
+        if (data.length < 6) {
+          onChange([...data, { icon: 'Home', title: '新服务', description: '服务描述...' }]);
+        }
+      };
+
+      const removeService = (index) => {
+        if (data.length > 1) {
+          const newServices = data.filter((_, i) => i !== index);
+          onChange(newServices);
+        }
+      };
+
+      const iconOptions = [
+        { value: 'Chair', label: '椅子' },
+        { value: 'Package', label: '包裹' },
+        { value: 'Home', label: '家' },
+        { value: 'Handshake', label: '握手' },
+        { value: 'Bed', label: '床' },
+        { value: 'Heart', label: '爱心' },
+        { value: 'Shield', label: '盾牌' },
+        { value: 'Award', label: '奖章' },
+      ];
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-900 mb-2">编辑提示</h4>
+            <p className="text-sm text-blue-700">
+              服务板块展示公司提供的核心服务。每个服务包含图标、标题和描述。
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {data.map((service, index) => (
+              <div key={index} className="card">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Icons.Briefcase />
+                    <span className="font-medium">服务 {index + 1}</span>
+                  </div>
+                  <button
+                    onClick={() => removeService(index)}
+                    disabled={data.length <= 1}
+                    className="p-2 text-gray-400 hover:text-red-500 disabled:opacity-30 transition-colors"
+                  >
+                    <Icons.Trash2 />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">图标</label>
+                    <select
+                      value={service.icon}
+                      onChange={(e) => handleServiceChange(index, 'icon', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                    >
+                      {iconOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1 flex items-center gap-1">
+                      <Icons.Type />
+                      标题
+                    </label>
+                    <input
+                      type="text"
+                      value={service.title}
+                      onChange={(e) => handleServiceChange(index, 'title', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                      placeholder="服务标题"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm text-gray-600 mb-1 flex items-center gap-1">
+                    <Icons.AlignLeft />
+                    描述
+                  </label>
+                  <textarea
+                    value={service.description}
+                    onChange={(e) => handleServiceChange(index, 'description', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent resize-y min-h-[80px]"
+                    rows={2}
+                    placeholder="服务描述..."
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={addService}
+            disabled={data.length >= 6}
+            className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-brand-orange hover:text-brand-orange disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          >
+            <Icons.Plus />
+            添加服务
+          </button>
+        </div>
+      );
+    }
+
+    // Products 编辑器
+    function ProductsEditor({ data, onChange }) {
+      const handleProductChange = (index, field, value) => {
+        const newProducts = [...data];
+        newProducts[index] = { ...newProducts[index], [field]: value };
+        onChange(newProducts);
+      };
+
+      const addProduct = () => {
+        if (data.length < 8) {
+          const newId = Math.max(...data.map(p => p.id), 0) + 1;
+          onChange([...data, { 
+            id: newId, 
+            name: '新产品', 
+            category: '分类', 
+            image: './product-image.png', 
+            description: '产品描述...' 
+          }]);
+        }
+      };
+
+      const removeProduct = (index) => {
+        if (data.length > 1) {
+          const newProducts = data.filter((_, i) => i !== index);
+          onChange(newProducts);
+        }
+      };
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-900 mb-2">编辑提示</h4>
+            <p className="text-sm text-blue-700">
+              产品展示区域展示公司的主要产品。每个产品包含图片、名称、分类和描述。
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {data.map((product, index) => (
+              <div key={product.id} className="card">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Icons.ShoppingBag />
+                    <span className="font-medium">产品 {index + 1}</span>
+                    <span className="text-xs text-gray-400">(ID: {product.id})</span>
+                  </div>
+                  <button
+                    onClick={() => removeProduct(index)}
+                    disabled={data.length <= 1}
+                    className="p-2 text-gray-400 hover:text-red-500 disabled:opacity-30 transition-colors"
+                  >
+                    <Icons.Trash2 />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1 flex items-center gap-1">
+                      <Icons.Type />
+                      产品名称
+                    </label>
+                    <input
+                      type="text"
+                      value={product.name}
+                      onChange={(e) => handleProductChange(index, 'name', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                      placeholder="产品名称"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1 flex items-center gap-1">
+                      <Icons.Tag />
+                      分类
+                    </label>
+                    <input
+                      type="text"
+                      value={product.category}
+                      onChange={(e) => handleProductChange(index, 'category', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                      placeholder="例如：座椅系列"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm text-gray-600 mb-1 flex items-center gap-1">
+                    <Icons.Image />
+                    图片路径
+                  </label>
+                  <input
+                    type="text"
+                    value={product.image}
+                    onChange={(e) => handleProductChange(index, 'image', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                    placeholder="./product-image.png"
+                  />
+                  <div className="mt-2">
+                    <img 
+                      src={product.image} 
+                      alt={product.name}
+                      className="h-24 object-contain bg-gray-50 rounded-lg"
+                      onError={(e) => {
+                        e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="60"%3E%3Crect fill="%23f0f0f0" width="100" height="60"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-size="10"%3E无图片%3C/text%3E%3C/svg%3E';
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm text-gray-600 mb-1">产品描述</label>
+                  <textarea
+                    value={product.description}
+                    onChange={(e) => handleProductChange(index, 'description', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent resize-y min-h-[80px]"
+                    rows={2}
+                    placeholder="产品描述..."
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={addProduct}
+            disabled={data.length >= 8}
+            className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-brand-orange hover:text-brand-orange disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          >
+            <Icons.Plus />
+            添加产品
+          </button>
+        </div>
+      );
+    }
+
+    // Testimonials 编辑器
+    function TestimonialsEditor({ data, onChange }) {
+      const handleTestimonialChange = (index, field, value) => {
+        const newTestimonials = [...data];
+        newTestimonials[index] = { ...newTestimonials[index], [field]: value };
+        onChange(newTestimonials);
+      };
+
+      const addTestimonial = () => {
+        if (data.length < 6) {
+          onChange([...data, { 
+            content: '评价内容...', 
+            author: '客户姓名', 
+            role: '职位', 
+            rating: 5 
+          }]);
+        }
+      };
+
+      const removeTestimonial = (index) => {
+        if (data.length > 1) {
+          const newTestimonials = data.filter((_, i) => i !== index);
+          onChange(newTestimonials);
+        }
+      };
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-900 mb-2">编辑提示</h4>
+            <p className="text-sm text-blue-700">
+              客户评价展示合作客户的真实反馈，增强网站可信度。
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {data.map((testimonial, index) => (
+              <div key={index} className="card">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Icons.MessageSquare />
+                    <span className="font-medium">评价 {index + 1}</span>
+                  </div>
+                  <button
+                    onClick={() => removeTestimonial(index)}
+                    disabled={data.length <= 1}
+                    className="p-2 text-gray-400 hover:text-red-500 disabled:opacity-30 transition-colors"
+                  >
+                    <Icons.Trash2 />
+                  </button>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm text-gray-600 mb-2 flex items-center gap-1">
+                    <Icons.Star />
+                    评分
+                  </label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => handleTestimonialChange(index, 'rating', star)}
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                          star <= testimonial.rating 
+                            ? 'bg-brand-orange text-white' 
+                            : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                        }`}
+                      >
+                        <Icons.Star />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm text-gray-600 mb-1">评价内容</label>
+                  <textarea
+                    value={testimonial.content}
+                    onChange={(e) => handleTestimonialChange(index, 'content', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent resize-y min-h-[100px]"
+                    rows={4}
+                    placeholder="客户评价内容..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1 flex items-center gap-1">
+                      <Icons.User />
+                      客户姓名
+                    </label>
+                    <input
+                      type="text"
+                      value={testimonial.author}
+                      onChange={(e) => handleTestimonialChange(index, 'author', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                      placeholder="例如：陈明远"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1 flex items-center gap-1">
+                      <Icons.Building2 />
+                      职位/公司
+                    </label>
+                    <input
+                      type="text"
+                      value={testimonial.role}
+                      onChange={(e) => handleTestimonialChange(index, 'role', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                      placeholder="例如：阳光养老院 院长"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={addTestimonial}
+            disabled={data.length >= 6}
+            className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-brand-orange hover:text-brand-orange disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          >
+            <Icons.Plus />
+            添加评价
+          </button>
+        </div>
+      );
+    }
+
+    // CTA 编辑器
+    function CTAEditor({ data, onChange }) {
+      const handleChange = (field, value) => {
+        onChange({ ...data, [field]: value });
+      };
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-900 mb-2">编辑提示</h4>
+            <p className="text-sm text-blue-700">
+              CTA（行动号召）区域是引导用户联系的重要部分，包含标题、描述、按钮和联系信息。
+            </p>
+          </div>
+
+          <div className="card">
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <Icons.Type />
+              标题
+            </label>
+            <textarea
+              value={data.title}
+              onChange={(e) => handleChange('title', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent resize-y min-h-[80px]"
+              rows={2}
+              placeholder="例如：准备好改变您的\n养老空间了吗？"
+            />
+            <p className="text-xs text-gray-500 mt-1">使用换行符可以创建多行标题</p>
+          </div>
+
+          <div className="card">
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <Icons.AlignLeft />
+              描述文字
+            </label>
+            <textarea
+              value={data.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent resize-y min-h-[80px]"
+              rows={2}
+              placeholder="输入描述文字..."
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="card">
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Icons.MousePointer />
+                主按钮文字
+              </label>
+              <input
+                type="text"
+                value={data.primaryButton}
+                onChange={(e) => handleChange('primaryButton', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                placeholder="例如：立即咨询"
+              />
+            </div>
+            <div className="card">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                次按钮文字
+              </label>
+              <input
+                type="text"
+                value={data.secondaryButton}
+                onChange={(e) => handleChange('secondaryButton', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                placeholder="例如：下载产品手册"
+              />
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="font-medium text-gray-900 mb-4">联系信息</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1 flex items-center gap-1">
+                  <Icons.Phone />
+                  咨询热线
+                </label>
+                <input
+                  type="text"
+                  value={data.phone}
+                  onChange={(e) => handleChange('phone', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                  placeholder="例如：400-888-8888"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-600 mb-1 flex items-center gap-1">
+                  <Icons.Mail />
+                  电子邮箱
+                </label>
+                <input
+                  type="text"
+                  value={data.email}
+                  onChange={(e) => handleChange('email', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                  placeholder="例如：contact@dekang.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-600 mb-1 flex items-center gap-1">
+                  <Icons.MapPin />
+                  公司地址
+                </label>
+                <input
+                  type="text"
+                  value={data.address}
+                  onChange={(e) => handleChange('address', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                  placeholder="例如：广东省佛山市顺德区家具产业园"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="card bg-brand-orange text-white">
+            <h3 className="font-medium mb-4">效果预览</h3>
+            <div className="text-center py-6">
+              <h2 className="text-2xl font-bold mb-4 whitespace-pre-line">{data.title}</h2>
+              <p className="text-white/80 mb-6">{data.description}</p>
+              <div className="flex justify-center gap-4 mb-6">
+                <button className="px-6 py-2 bg-white text-brand-orange rounded-lg font-medium">
+                  {data.primaryButton}
+                </button>
+                <button className="px-6 py-2 border-2 border-white text-white rounded-lg font-medium">
+                  {data.secondaryButton}
+                </button>
+              </div>
+              <div className="space-y-2 text-sm text-white/80">
+                <div>{data.phone}</div>
+                <div>{data.email}</div>
+                <div>{data.address}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // 预览模态框
+    function PreviewModal({ config, onClose }) {
+      const [device, setDevice] = useState('desktop');
+
+      const deviceWidths = {
+        desktop: '100%',
+        tablet: '768px',
+        mobile: '375px'
+      };
+
+      const generatePreviewHTML = () => {
+        return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>德康适老 - 预览</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    h1, h2, h3, h4, h5, h6 { font-family: 'Montserrat', sans-serif; }
+    .text-brand-orange { color: #f49f36; }
+    .bg-brand-orange { background-color: #f49f36; }
+  </style>
+</head>
+<body class="bg-white">
+  <section class="relative min-h-screen flex items-center">
+    <div class="absolute inset-0 z-0">
+      <div class="absolute right-0 top-0 h-full w-full lg:w-3/5">
+        <img src="${config.hero.backgroundImage}" class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent"></div>
+      </div>
+    </div>
+    <div class="relative z-10 container mx-auto px-6 py-20">
+      <div class="max-w-2xl">
+        <div class="inline-flex items-center gap-2 bg-orange-100 px-4 py-2 rounded-full mb-6">
+          <span class="w-2 h-2 rounded-full bg-brand-orange"></span>
+          <span class="text-sm font-medium text-brand-orange">${config.hero.tag}</span>
+        </div>
+        <h1 class="text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          ${config.hero.title}<br>
+          <span class="text-brand-orange">${config.hero.titleHighlight}</span>的空间
+        </h1>
+        <p class="text-lg text-gray-600 mb-8">${config.hero.description}</p>
+        <div class="flex gap-4">
+          <button class="px-8 py-3 bg-brand-orange text-white rounded-lg font-medium">${config.hero.primaryButton}</button>
+          <button class="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-medium">${config.hero.secondaryButton}</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-white">
+    <div class="container mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <span class="text-sm font-semibold text-brand-orange uppercase tracking-wider mb-4 block">${config.about.tag}</span>
+          <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+            ${config.about.title}<br>
+            <span class="text-brand-orange">${config.about.titleHighlight}</span>
+          </h2>
+          <p class="text-gray-600 text-lg mb-8">${config.about.description}</p>
+          <div class="space-y-4">
+            ${config.about.features.map(f => `
+              <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                <div class="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-6 h-6 text-brand-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-gray-900">${f.title}</h3>
+                  <p class="text-sm text-gray-600">${f.description}</p>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="relative">
+          <img src="${config.about.image1}" class="rounded-2xl shadow-xl w-full" />
+          <img src="${config.about.image2}" class="absolute -bottom-8 -right-8 w-2/3 rounded-2xl shadow-xl border-4 border-white" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-8">
+        ${config.stats.items.map(s => `
+          <div class="text-center">
+            <div class="text-4xl lg:text-5xl font-bold text-brand-orange mb-2">${s.value}</div>
+            <div class="text-gray-600">${s.label}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-white">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="text-sm font-semibold text-brand-orange uppercase tracking-wider mb-4 block">我们的服务</span>
+        <h2 class="text-4xl lg:text-5xl font-bold text-gray-900">一站式<span class="text-brand-orange">适老化</span>解决方案</h2>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        ${config.services.map(s => `
+          <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+            <div class="w-16 h-16 rounded-xl bg-orange-100 flex items-center justify-center mb-6">
+              <svg class="w-8 h-8 text-brand-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">${s.title}</h3>
+            <p class="text-gray-600">${s.description}</p>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-gray-50">
+    <div class="container mx-auto px-6">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
+        <div>
+          <span class="text-sm font-semibold text-brand-orange uppercase tracking-wider mb-4 block">产品展示</span>
+          <h2 class="text-4xl lg:text-5xl font-bold text-gray-900">精选<span class="text-brand-orange">适老化</span>家具</h2>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        ${config.products.map(p => `
+          <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="h-64 bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-6">
+              <img src="${p.image}" alt="${p.name}" class="max-h-full max-w-full object-contain" />
+            </div>
+            <div class="p-6">
+              <span class="text-xs font-medium text-brand-orange bg-orange-100 px-3 py-1 rounded-full">${p.category}</span>
+              <h3 class="text-lg font-bold text-gray-900 mt-3 mb-2">${p.name}</h3>
+              <p class="text-sm text-gray-600">${p.description}</p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-brand-orange">
+    <div class="container mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div class="text-white">
+          <h2 class="text-4xl lg:text-5xl font-bold mb-6 whitespace-pre-line">${config.cta.title}</h2>
+          <p class="text-white/80 text-lg mb-8">${config.cta.description}</p>
+          <div class="flex gap-4">
+            <button class="px-8 py-3 bg-white text-brand-orange rounded-lg font-medium">${config.cta.primaryButton}</button>
+            <button class="px-8 py-3 border-2 border-white text-white rounded-lg font-medium">${config.cta.secondaryButton}</button>
+          </div>
+        </div>
+        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8">
+          <h3 class="text-xl font-bold text-white mb-6">联系我们</h3>
+          <div class="space-y-4 text-white">
+            <div>${config.cta.phone}</div>
+            <div>${config.cta.email}</div>
+            <div>${config.cta.address}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>`;
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-6xl h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-4">
+                <h3 className="font-semibold text-lg">网站预览</h3>
+                <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setDevice('desktop')}
+                    className={`p-2 rounded-lg transition-colors ${device === 'desktop' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'}`}
+                    title="桌面端"
+                  >
+                    <Icons.Monitor />
+                  </button>
+                  <button
+                    onClick={() => setDevice('tablet')}
+                    className={`p-2 rounded-lg transition-colors ${device === 'tablet' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'}`}
+                    title="平板"
+                  >
+                    <Icons.Tablet />
+                  </button>
+                  <button
+                    onClick={() => setDevice('mobile')}
+                    className={`p-2 rounded-lg transition-colors ${device === 'mobile' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'}`}
+                    title="手机"
+                  >
+                    <Icons.Smartphone />
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Icons.X />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto bg-gray-100 p-4">
+              <div 
+                className="mx-auto bg-white shadow-xl transition-all duration-300"
+                style={{ width: deviceWidths[device], minHeight: '100%' }}
+              >
+                <iframe
+                  srcDoc={generatePreviewHTML()}
+                  className="w-full h-full min-h-[800px]"
+                  title="网站预览"
+                  sandbox="allow-scripts"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // 主应用
+    function App() {
+      const [config, setConfig] = useState(defaultConfig);
+      const [activeSection, setActiveSection] = useState('hero');
+      const [showPreview, setShowPreview] = useState(false);
+      const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+
+      useEffect(() => {
+        const saved = localStorage.getItem('dekang-config');
+        if (saved) {
+          try {
+            setConfig(JSON.parse(saved));
+          } catch (e) {
+            console.error('Failed to load config:', e);
+          }
+        }
+      }, []);
+
+      const handleSave = () => {
+        localStorage.setItem('dekang-config', JSON.stringify(config));
+        setShowSaveSuccess(true);
+        setTimeout(() => setShowSaveSuccess(false), 2000);
+      };
+
+      const handleExport = () => {
+        const dataStr = JSON.stringify(config, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'website-config.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      };
+
+      const updateConfig = (section, data) => {
+        setConfig(prev => ({ ...prev, [section]: data }));
+      };
+
+      const renderEditor = () => {
+        switch (activeSection) {
+          case 'hero':
+            return <HeroEditor data={config.hero} onChange={(data) => updateConfig('hero', data)} />;
+          case 'about':
+            return <AboutEditor data={config.about} onChange={(data) => updateConfig('about', data)} />;
+          case 'stats':
+            return <StatsEditor data={config.stats} onChange={(data) => updateConfig('stats', data)} />;
+          case 'services':
+            return <ServicesEditor data={config.services} onChange={(data) => updateConfig('services', data)} />;
+          case 'products':
+            return <ProductsEditor data={config.products} onChange={(data) => updateConfig('products', data)} />;
+          case 'testimonials':
+            return <TestimonialsEditor data={config.testimonials} onChange={(data) => updateConfig('testimonials', data)} />;
+          case 'cta':
+            return <CTAEditor data={config.cta} onChange={(data) => updateConfig('cta', data)} />;
+          default:
+            return null;
+        }
+      };
+
+      const ActiveIcon = Icons[sections.find(s => s.id === activeSection)?.icon] || Icons.Layout;
+
+      return (
+        <div className="min-h-screen bg-gray-50 flex">
+          {/* Sidebar */}
+          <aside className="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-brand-orange rounded-lg flex items-center justify-center">
+                  <Icons.Layout className="text-white" />
+                </div>
+                <div>
+                  <h1 className="font-bold text-lg">德康网站管理</h1>
+                  <p className="text-xs text-gray-500">可视化编辑器</p>
+                </div>
+              </div>
+            </div>
+
+            <nav className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-1">
+                {sections.map((section) => {
+                  const Icon = Icons[section.icon];
+                  return (
+                    <button
+                      key={section.id}
+                      onClick={() => setActiveSection(section.id)}
+                      className={`sidebar-item w-full ${activeSection === section.id ? 'active' : ''}`}
+                    >
+                      <Icon />
+                      <span>{section.label}</span>
+                      <Icons.ChevronRight className={`w-4 h-4 ml-auto transition-transform ${activeSection === section.id ? 'rotate-90' : ''}`} />
+                    </button>
+                  );
+                })}
+              </div>
+            </nav>
+
+            <div className="p-4 border-t border-gray-200 space-y-2">
+              <button
+                onClick={() => setShowPreview(true)}
+                className="flex items-center gap-2 w-full px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Icons.Eye />
+                <span>预览网站</span>
+              </button>
+              <button
+                onClick={handleExport}
+                className="flex items-center gap-2 w-full px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Icons.Download />
+                <span>导出配置</span>
+              </button>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1 ml-64">
+            <header className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <ActiveIcon className="text-brand-orange" />
+                  <h2 className="text-xl font-semibold">
+                    {sections.find(s => s.id === activeSection)?.label}
+                  </h2>
+                </div>
+                <button
+                  onClick={handleSave}
+                  className="px-4 py-2 bg-brand-orange text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
+                >
+                  <Icons.Save />
+                  <span>保存修改</span>
+                </button>
+              </div>
+            </header>
+
+            <div className="p-8 max-w-4xl">
+              {renderEditor()}
+            </div>
+          </main>
+
+          {showPreview && (
+            <PreviewModal config={config} onClose={() => setShowPreview(false)} />
+          )}
+
+          {showSaveSuccess && (
+            <div className="fixed bottom-6 right-6 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in">
+              <Icons.Check />
+              <span>保存成功！</span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
