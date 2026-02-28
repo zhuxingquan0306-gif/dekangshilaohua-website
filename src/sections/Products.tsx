@@ -46,7 +46,7 @@ export default function Products() {
       id: 2,
       name: '适老化沙发',
       category: '沙发系列',
-      image: '/product-sofa.png',
+      image: './product-sofa.png',
       description: '加高靠背，扶手支撑，便于起身'
     },
     {
@@ -60,7 +60,7 @@ export default function Products() {
       id: 4,
       name: '多功能护理床',
       category: '床具系列',
-      image: '/product-bed.png',
+      image: './product-bed.png',
       description: '电动升降，护栏保护，医用级品质'
     }
   ];
