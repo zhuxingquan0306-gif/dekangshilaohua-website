@@ -23,7 +23,7 @@ export default function Hero() {
           }`}
         >
           <img
-            src="/hero-living-room.jpg"
+            src="./hero-living-room.jpg"
             alt="适老化家居环境"
             className="h-full w-full object-cover"
           />
