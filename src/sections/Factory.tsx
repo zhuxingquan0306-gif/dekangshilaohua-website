@@ -130,7 +130,7 @@ export default function Factory() {
             >
               <div className="rounded-2xl overflow-hidden shadow-2xl">
                 <img
-                  src="/factory-1.jpg"
+                  src="./factory-1.jpg"
                   alt="现代化工厂"
                   className="w-full h-[350px] object-cover"
                 />
