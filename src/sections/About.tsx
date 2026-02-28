@@ -59,7 +59,7 @@ export default function About() {
             >
               <div className="img-hover-zoom rounded-2xl overflow-hidden shadow-2xl">
                 <img
-                  src="/about-room-1.jpg"
+                  src="./about-room-1.jpg"
                   alt="适老化客厅"
                   className="w-full h-[400px] object-cover"
                 />
@@ -74,7 +74,7 @@ export default function About() {
             >
               <div className="img-hover-zoom rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
                 <img
-                  src="/about-room-2.jpg"
+                  src="./about-room-2.jpg"
                   alt="适老化家具"
                   className="w-full h-[250px] object-cover"
                 />
