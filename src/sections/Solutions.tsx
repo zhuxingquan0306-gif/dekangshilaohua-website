@@ -117,7 +117,7 @@ export default function Solutions() {
       icon: Bed,
       title: '卧室空间',
       subtitle: '安全舒适的休息环境',
-      image: '/scene-bedroom.jpg',
+      image: './scene-bedroom.jpg',
       features: [
         '护理床/自理床配置',
         '床头柜与衣柜',
@@ -129,7 +129,7 @@ export default function Solutions() {
       icon: UtensilsCrossed,
       title: '餐厅空间',
       subtitle: '温馨愉悦的就餐体验',
-      image: '/scene-dining.jpg',
+      image: './scene-dining.jpg',
       features: [
         '适老化餐桌椅',
         '无障碍通道',
@@ -141,7 +141,7 @@ export default function Solutions() {
       icon: Sofa,
       title: '活动空间',
       subtitle: '丰富多彩的社交场所',
-      image: '/scene-lounge.jpg',
+      image: './scene-lounge.jpg',
       features: [
         '舒适沙发座椅',
         '活动桌椅组合',
